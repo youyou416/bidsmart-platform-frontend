@@ -1,11 +1,17 @@
 import { http } from './http'
-import type { CurrentUser, MenuResource, PublicConfig } from '../types/api'
+import type { CaptchaChallenge, CurrentUser, MenuResource, PublicConfig } from '../types/api'
 
 export const authApi = {
-  login: (username: string, password: string) =>
+  captcha: (signal?: AbortSignal) =>
+    http.request<CaptchaChallenge>('/security/captcha', {
+      method: 'POST',
+      signal,
+      notifyUnauthorized: false,
+    }),
+  login: (username: string, password: string, captchaId: string, captchaCode: string) =>
     http.request<CurrentUser>('/auth/login', {
       method: 'POST',
-      body: { username, password },
+      body: { username, password, captchaId, captchaCode },
       notifyUnauthorized: false,
     }),
   logout: () => http.request<null>('/auth/logout', { method: 'POST' }),

@@ -39,3 +39,10 @@ export interface PublicConfig {
   themeColor: string
   tabsEnabled: boolean
 }
+
+export interface CaptchaChallenge {
+  captchaId: string
+  imageDataUrl: string
+  expiresAt: string
+  expiresInSeconds: number
+}

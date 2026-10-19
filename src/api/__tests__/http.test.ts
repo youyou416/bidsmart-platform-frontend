@@ -80,6 +80,31 @@ describe('HTTP response contract', () => {
     expect(prompts[0]).not.toContain('会话已失效')
   })
 
+  it('maps CAPTCHA_INVALID to a safe prompt while preserving its error code', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(response(csrf))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            code: 'CAPTCHA_INVALID',
+            message: 'private detail',
+            traceId: 'captcha-trace',
+          }),
+          { status: 400 },
+        ),
+      )
+    const client = new RequestClient('/api/v1', fetcher)
+    await expect(client.request('/auth/login', { method: 'POST', body: {} })).rejects.toMatchObject(
+      {
+        status: 400,
+        code: 'CAPTCHA_INVALID',
+        message: '验证码错误或已失效，请重新输入',
+        traceId: 'captcha-trace',
+      },
+    )
+  })
+
   it('uses same-origin cookies, disables caching, and unwraps successful envelopes', async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(response({ id: '9007199254740993' }))
     const client = new RequestClient('/api/v1', fetcher)

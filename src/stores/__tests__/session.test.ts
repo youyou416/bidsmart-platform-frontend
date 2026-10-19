@@ -156,8 +156,18 @@ describe('session restoration', () => {
 describe('authentication lifecycle and credential storage', () => {
   it('renews CSRF after successful login, loads current authorization, and preserves password spaces', async () => {
     const session = useSessionStore()
-    await session.login('synthetic-user', '  synthetic long password  ')
-    expect(authApi.login).toHaveBeenCalledWith('synthetic-user', '  synthetic long password  ')
+    await session.login(
+      'synthetic-user',
+      '  synthetic long password  ',
+      'synthetic-captcha-id',
+      '2468',
+    )
+    expect(authApi.login).toHaveBeenCalledWith(
+      'synthetic-user',
+      '  synthetic long password  ',
+      'synthetic-captcha-id',
+      '2468',
+    )
     expect(http.refreshCsrf).toHaveBeenCalledTimes(2)
     const loginOrder = vi.mocked(authApi.login).mock.invocationCallOrder[0]!
     const renewOrder = vi.mocked(http.refreshCsrf).mock.invocationCallOrder[1]!
@@ -172,7 +182,9 @@ describe('authentication lifecycle and credential storage', () => {
     await session.restore()
     session.visitTab('/home', '框架首页')
     vi.mocked(authApi.login).mockRejectedValue(new ApiError(401, 'INVALID_CREDENTIALS', '登录失败'))
-    await expect(session.login('another-user', 'synthetic-password')).rejects.toMatchObject({
+    await expect(
+      session.login('another-user', 'synthetic-password', 'synthetic-captcha-id', '2468'),
+    ).rejects.toMatchObject({
       status: 401,
     })
     expect(session.user).toBeNull()
@@ -211,9 +223,9 @@ describe('authentication lifecycle and credential storage', () => {
 
   it('never persists credentials, identity, or authorization in browser storage', async () => {
     const session = useSessionStore()
-    await session.login('synthetic-user', 'synthetic-login-secret')
+    await session.login('synthetic-user', 'synthetic-login-secret', 'synthetic-captcha-id', '2468')
     await session.changePassword('synthetic-login-secret', 'synthetic-new-secret')
-    await session.login('synthetic-user', 'synthetic-new-secret')
+    await session.login('synthetic-user', 'synthetic-new-secret', 'synthetic-captcha-id', '2468')
     await session.logout()
     for (const storage of [localStorageSpy, sessionStorageSpy]) {
       expect(storage.getItem).not.toHaveBeenCalled()
@@ -229,7 +241,12 @@ describe('authentication lifecycle and credential storage', () => {
     const login = deferred<CurrentUser>()
     vi.mocked(authApi.login).mockReturnValue(login.promise)
     const session = useSessionStore()
-    const signingIn = session.login('synthetic-user', 'synthetic-secret')
+    const signingIn = session.login(
+      'synthetic-user',
+      'synthetic-secret',
+      'synthetic-captcha-id',
+      '2468',
+    )
     await vi.waitFor(() => {
       expect(authApi.login).toHaveBeenCalledTimes(1)
     })

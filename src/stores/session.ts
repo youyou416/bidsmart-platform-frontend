@@ -63,7 +63,7 @@ export const useSessionStore = defineStore('session', () => {
     return restoring
   }
 
-  async function login(username: string, password: string) {
+  async function login(username: string, password: string, captchaId: string, captchaCode: string) {
     reset(false)
     const expectedGeneration = generation
     const verify = () => {
@@ -72,7 +72,7 @@ export const useSessionStore = defineStore('session', () => {
     }
     await http.refreshCsrf()
     verify()
-    await authApi.login(username, password)
+    await authApi.login(username, password, captchaId, captchaCode)
     verify()
     await http.refreshCsrf()
     verify()

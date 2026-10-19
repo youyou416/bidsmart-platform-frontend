@@ -125,9 +125,11 @@ export class RequestClient {
         throw new ApiError(
           response.status,
           payload?.code || 'HTTP_ERROR',
-          response.status === 401 && path === '/auth/login'
-            ? '账号或密码错误，或账号暂不可用'
-            : statusMessages[response.status] || '服务响应异常，请稍后重试',
+          response.status === 400 && payload?.code === 'CAPTCHA_INVALID'
+            ? '验证码错误或已失效，请重新输入'
+            : response.status === 401 && path === '/auth/login'
+              ? '账号或密码错误，或账号暂不可用'
+              : statusMessages[response.status] || '服务响应异常，请稍后重试',
           payload?.traceId || '',
         )
       }
