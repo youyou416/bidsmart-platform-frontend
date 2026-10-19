@@ -18,6 +18,7 @@ const session = useSessionStore()
 const roleNames = computed(
   () => session.user?.roles.map((role) => role.name).join('、') || '未分配角色',
 )
+
 const foundations = [
   {
     icon: User,
